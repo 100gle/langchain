@@ -108,7 +108,6 @@ class RunEvaluatorChain(Chain, RunEvaluator):
 class StringRunEvaluatorChain(Chain, RunEvaluator):
     """Evaluate Run and optional examples."""
 
-
     string_evaluator: StringEvaluator
     """The evaluation chain."""
     output_parser: RunEvaluatorOutputParser
@@ -122,7 +121,8 @@ class StringRunEvaluatorChain(Chain, RunEvaluator):
     def output_keys(self) -> List[str]:
         return ["feedback"]
     
-    def get_args(self, run: Run, example: Optional[Example]) -> Dict:
+    def prepare_inputs(self, run: Run, example: Optional[Example] = None) -> Dict[str, Any]:
+        """Return inputs for the chain."""
 
 
     def _call(
@@ -137,7 +137,7 @@ class StringRunEvaluatorChain(Chain, RunEvaluator):
         _run_manager = run_manager or CallbackManagerForChainRun.get_noop_manager()
         callbacks = _run_manager.get_child()
         chain_output = self.string_evaluator.evaluate_strings(
-            chain_input, callbacks=callbacks, include_run_info=True
+            chain_input[""], callbacks=callbacks, include_run_info=True
         )
         run_info = chain_output[RUN_KEY]
         feedback = self.output_parser.parse_chain_output(chain_output)
@@ -151,7 +151,7 @@ class StringRunEvaluatorChain(Chain, RunEvaluator):
     ) -> Dict[str, Any]:
         run: Run = inputs["run"]
         example: Optional[Example] = inputs.get("example")
-        chain_input = self.input_mapper.map(run, example)
+        chain_input = self.prepare_inputs(run, example)
         _run_manager = run_manager or AsyncCallbackManagerForChainRun.get_noop_manager()
         callbacks = _run_manager.get_child()
         chain_output = await self.eval_chain.acall(
@@ -176,3 +176,6 @@ class StringRunEvaluatorChain(Chain, RunEvaluator):
         """Evaluate an example."""
         result = await self.acall({"run": run, "example": example})
         return result["feedback"]
+
+    @classmethod
+    def from_run_type(cls, run_type: RunTypeEnum, ) -> 
